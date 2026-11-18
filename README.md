@@ -2,7 +2,7 @@
 
 A **100% client-side** application for a SQL Injection class (Intrusion Testing Techniques).
 A **real SQLite database** runs in the student's browser; nothing is sent to any server.
-Avaliable here: https://jrafa1607.github.io/SQLI-Login-Lab/.  You can:
+Avaliable here: https://jrafa1607.github.io/SQLI-Login-Lab/ .  You can:
 
 - **Create** and **query** users in the `users` table;
 - **Exploit the login field** comparing the **vulnerable** version with the **secure** one;
