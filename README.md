@@ -32,18 +32,9 @@ those that **fail on purpose** — the lesson being that a payload must match bo
 > Isolated training environment, for educational purposes only.
 > Testing SQL Injection on third-party systems without authorization is a crime (Law 12.737/2012, Brazil).
 
-## Credits
 
-Built with [sql.js](https://github.com/sql-js/sql.js) (SQLite compiled to WebAssembly).
-Payload reference inspired by the OWASP SQL Injection materials.
+#### ⚖️ Intellectual Property (IP) Notice
 
-## Author
+All source code, documentation, and research methodologies contained in this repository are the exclusive Intellectual Property of the author. All rights reserved. Use of this content for academic or professional purposes must include proper citation and attribution. See the [`LICENSE`](LICENSE) file for details.
 
-**João Rafael** — Intrusion Testing Techniques, UNINOVE
-GitHub: [@jrafa1607](https://github.com/jrafa1607)
-
-## License
-
-Distributed under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.
-
-© 2026 João Rafael. Educational use — provided "as is", without warranty of any kind.
+**Copyright © 2026 [João Rafael](https://www.linkedin.com/in/jrafa1607/).**
