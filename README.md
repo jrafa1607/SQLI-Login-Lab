@@ -2,6 +2,7 @@
 
 A **100% client-side** application for a SQL Injection class (Intrusion Testing Techniques).
 A **real SQLite database** runs in the student's browser (via [sql.js](https://sql.js.org)); nothing is sent to any server.
+Avaliable here: https://jrafa1607.github.io/sqli-login-lab/
 
 Students can:
 - **Create** and **query** users in the `users` table;
@@ -11,8 +12,6 @@ Students can:
 > Isolated training environment, for educational purposes only. Testing SQL Injection on third-party systems without authorization is a crime (Law 12.737/2012, Brazil).
 
 --- 
-
-Link to Application access: https://jrafa1607.github.io/sqli-login-lab/
 
 ## Publish on GitHub Pages
 
@@ -46,3 +45,19 @@ python3 -m http.server 8000
 The payload list is grouped into those that **work** against this exact query (SQLite) and
 those that **fail on purpose** — the lesson being that a payload must match both the
 **database** (SQLite uses `--`, not `#`) and the **query shape**.
+
+## Credits
+
+Built with [sql.js](https://github.com/sql-js/sql.js) (SQLite compiled to WebAssembly).
+Payload reference inspired by the OWASP SQL Injection materials.
+
+## Author
+
+**João Rafael** — Intrusion Testing Techniques, UNINOVE
+GitHub: [@jrafa1607](https://github.com/jrafa1607)
+
+## License
+
+Distributed under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.
+
+© 2026 João Rafael. Educational use — provided "as is", without warranty of any kind.
