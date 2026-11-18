@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Injection — Lab</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#131f36; --panel2:#0f1830; --line:#243456;
+    --ink:#e8eefc; --muted:#93a1c4; --green:#3ddc84; --blue:#5aa0ff;
+    --red:#ff6b81; --amber:#ffc266; --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#15233f 0%,var(--bg) 55%);color:var(--ink);font-family:var(--sans);line-height:1.5}
+  a{color:var(--blue)}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#1f3b2a,#0f1830);border:1px solid #2b6b45;display:flex;align-items:center;justify-content:center}
+  .logo svg{width:26px;height:26px}
+  h1{font-size:24px;margin:0;letter-spacing:-.3px}
+  h1 b{color:var(--green)}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:2px}
+  .tag{font-family:var(--mono);font-size:11px;color:var(--green);border:1px solid #2b6b45;background:#0f2017;padding:5px 10px;border-radius:20px;white-space:nowrap}
+  .note{display:flex;gap:12px;align-items:flex-start;background:#1a2133;border:1px solid #3a2f1e;border-left:3px solid var(--amber);border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:13.5px;color:#e4d7bf}
+  .note svg{flex:0 0 auto;margin-top:2px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px}
+  .card h2{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:9px}
+  .card .desc{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .d-green{background:var(--green)} .d-blue{background:var(--blue)} .d-red{background:var(--red)} .d-amber{background:var(--amber)}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;text-transform:uppercase;letter-spacing:.5px}
+  input[type=text],input[type=password]{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:var(--mono);font-size:14px;padding:11px 13px;outline:none}
+  input:focus{border-color:var(--blue)}
+  .row{display:flex;gap:12px}.row>div{flex:1}
+  .btn{appearance:none;border:0;border-radius:9px;padding:11px 16px;font-weight:600;font-size:14px;cursor:pointer;font-family:var(--sans);transition:filter .15s}
+  .btn:hover{filter:brightness(1.1)}
+  .btn-green{background:var(--green);color:#06230f}
+  .btn-blue{background:var(--blue);color:#07183a}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn-red{background:transparent;border:1px solid #5a2634;color:var(--red)}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid #1b2944;font-family:var(--mono)}
+  tbody tr:hover td{background:#16233f}
+  .result{margin-top:12px;border-radius:9px;padding:12px 15px;font-size:14px;display:none}
+  .result.ok{display:block;background:#0f2619;border:1px solid #2b6b45;color:#9ff0c0}
+  .result.fail{display:block;background:#2a1622;border:1px solid #5a2634;color:#ffb3c0}
+  .result.err{display:block;background:#2a2318;border:1px solid #5a4a26;color:#ffd9a0}
+  .result b{color:#fff}
+
+  /* ---------- Highlighted "real login page" section ---------- */
+  .stage{margin:22px 0;border:1px solid #30507f;border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px #16233f, 0 18px 50px -20px #000}
+  .stage-label{display:flex;align-items:center;gap:8px;background:#0a1324;padding:9px 16px;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--blue);border-bottom:1px solid var(--line);font-weight:700}
+  .chrome{display:flex;align-items:center;gap:7px;padding:11px 16px;background:#101a30;border-bottom:1px solid var(--line)}
+  .chrome .cd{width:11px;height:11px;border-radius:50%}
+  .cdr{background:#ff5f57}.cdy{background:#febc2e}.cdg{background:#28c840}
+  .chrome .url{margin-left:10px;flex:1;background:#0c1526;border:1px solid var(--line);border-radius:7px;padding:6px 13px;font-family:var(--mono);font-size:12.5px;color:#8aa0c4;display:flex;align-items:center;gap:7px}
+  .lockico{width:11px;height:11px;flex:0 0 auto}
+  .pagebody{background:linear-gradient(180deg,#0e1830,#0b1322);padding:30px;display:grid;grid-template-columns:minmax(0,430px) 1fr;gap:26px;align-items:start}
+  @media(max-width:820px){.pagebody{grid-template-columns:1fr}}
+  .backend{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--muted)}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg div{padding:7px 12px;font-size:12.5px;cursor:pointer;color:var(--muted);background:var(--panel2)}
+  .seg .on-v{background:#2a1622;color:#ffb3c0}
+  .seg .on-s{background:#102a1c;color:#9ff0c0}
+  .signin{background:#0f1a2f;border:1px solid var(--line);border-radius:14px;padding:26px}
+  .signin .appname{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .signin .appname .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#2b6b45,#123)}
+  .signin h3{font-size:19px;margin:0}
+  .signin .welcome{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .field{margin-bottom:14px}
+  .field input{font-family:var(--sans)}
+  .signin .btn{width:100%;margin-top:4px}
+  .peek{background:transparent;border:0;color:var(--muted);font-size:12px;cursor:pointer;margin-top:12px;text-decoration:underline;padding:0}
+  .side h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .query{font-family:var(--mono);font-size:13px;background:#0a1120;border:1px solid var(--line);border-radius:9px;padding:13px 15px;color:#cdd8f2;white-space:pre-wrap;word-break:break-word;line-height:1.7}
+  .query .kw{color:var(--blue)} .query .str{color:#9ff0c0} .query .inj{color:var(--red);font-weight:700;background:#2a1622;border-radius:3px;padding:0 2px} .query .ph{color:var(--amber)}
+
+  /* ---------- Payloads ---------- */
+  .pay{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .pill{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer;transition:border-color .15s}
+  .pill:hover{border-color:var(--green)}
+  .pill code{font-family:var(--mono);font-size:13px;color:var(--green);white-space:nowrap}
+  .pill span{color:var(--muted);font-size:12.5px;margin-left:auto;text-align:right}
+  .grp{font-size:11px;letter-spacing:.5px;color:var(--muted);margin:8px 0 2px;font-weight:700}
+  .loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:9;color:var(--muted)}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--green);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .hint{font-size:12px;color:var(--muted);margin-top:12px}
+  .hint code{font-family:var(--mono);color:var(--green)}
+</style>
+</head>
+<body>
+<div class="loading" id="loading"><div class="spin"></div><div>Loading the SQLite engine…</div></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#3ddc84" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></div>
+      <div>
+        <h1>SQL Injection — <b>Lab</b></h1>
+        <div class="sub">Create and query users, then exploit the login field. A real SQLite database running in your browser.</div>
+      </div>
+    </div>
+    <div class="tag">TRAINING ENVIRONMENT · EDUCATIONAL USE</div>
+  </header>
+
+  <div class="note">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffc266" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div>This lab is an <b>isolated sandbox</b>: the database lives only in your browser's memory and nothing leaves your computer. These techniques are meant to <b>understand and defend</b> applications. Testing SQL Injection on third-party systems without authorization is a crime (<b>Law 12.737/2012</b>).</div>
+  </div>
+
+  <!-- DB + CREATE -->
+  <div class="grid">
+    <div class="card">
+      <h2><span class="dot d-blue"></span>Database</h2>
+      <p class="desc">The <code>users</code> table. Click refresh to query the records (<code>SELECT * FROM users</code>).</p>
+      <table><thead><tr><th>id</th><th>username</th><th>password</th></tr></thead><tbody id="utable"></tbody></table>
+      <div class="bar">
+        <button class="btn btn-ghost" onclick="renderUsers()">Refresh list</button>
+        <button class="btn btn-red" onclick="resetDB()">Reset database</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot d-green"></span>Create user</h2>
+      <p class="desc">Insertion uses a <b>parameterized query</b> (safe). Use it to populate the database and then query it.</p>
+      <div class="row">
+        <div><label>Username</label><input id="newuser" type="text" placeholder="e.g. carol"></div>
+        <div><label>Password</label><input id="newpass" type="text" placeholder="e.g. carol123"></div>
+      </div>
+      <div class="bar"><button class="btn btn-green" onclick="addUser()">Create</button></div>
+      <div class="result" id="addres"></div>
+      <p class="hint">Initial seed: <code>admin/admin123</code>, <code>alice/alicepass</code>, <code>bob/bobpass</code>.</p>
+    </div>
+  </div>
+
+  <!-- HIGHLIGHTED "REAL PAGE" LOGIN -->
+  <div class="stage">
+    <div class="stage-label"><span class="dot d-red"></span>Target application · login page</div>
+    <div class="chrome">
+      <span class="cd cdr"></span><span class="cd cdy"></span><span class="cd cdg"></span>
+      <span class="url"><svg class="lockico" viewBox="0 0 24 24" fill="none" stroke="#8aa0c4" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>https://myapp.local/login</span>
+    </div>
+    <div class="pagebody">
+      <div>
+        <div class="backend">
+          <span>Login backend:</span>
+          <div class="seg">
+            <div id="segV" onclick="setMode('v')">Vulnerable</div>
+            <div id="segS" onclick="setMode('s')">Secure</div>
+          </div>
+        </div>
+        <div class="signin">
+          <div class="appname"><div class="mark"></div><h3>MyApp</h3></div>
+          <p class="welcome">Sign in to your account</p>
+          <div class="field"><label>Username</label><input id="loguser" type="text" placeholder="Enter your username"></div>
+          <div class="field"><label>Password</label><input id="logpass" type="password" placeholder="Enter your password"></div>
+          <button class="btn" id="loginBtn" onclick="doLogin()">Sign in</button>
+          <div class="result" id="logres"></div>
+          <button class="peek" onclick="clearLogin()">Clear fields</button>
+        </div>
+      </div>
+      <div class="side">
+        <h4>Query sent to the database</h4>
+        <div class="query" id="qview"></div>
+        <p class="hint">Watch how your typing becomes part of the SQL on the <b>Vulnerable</b> backend — and stays a parameter on the <b>Secure</b> one.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYLOADS (hidden until revealed) -->
+  <div class="card">
+    <h2><span class="dot d-amber"></span>Bypass payloads</h2>
+    <p class="desc">Hidden on purpose — try to break the login yourself first. Reveal them to compare. Clicking one fills the <b>Vulnerable</b> login's username field.</p>
+    <button class="btn btn-ghost" id="payBtn" onclick="togglePayloads()">Show payloads</button>
+    <div class="pay" id="paylist" style="display:none"></div>
+    <p class="hint" id="payHint" style="display:none">The lesson: a payload must match the <b>database</b> (here SQLite: the comment is <code>--</code>, not <code>#</code>) and the <b>query shape</b>. That's why half the list <b>fails on purpose</b> — read the error or the "0 rows". The <b>password</b> field can be injected too.</p>
+  </div>
+
+  <footer>
+    <span>Techniques of Intrusion Testing — SQL Injection Lab</span>
+    <span>UNINOVE · Prof. João Rafael · 2026</span>
+  </footer>
+</div>
+
+<script>
+let db, SQL, mode='v', SQLBASE='', payShown=false;
+const SEED=[['admin','admin123'],['alice','alicepass'],['bob','bobpass']];
+const CDNS=['https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/','https://unpkg.com/sql.js@1.10.3/dist/'];
+
+const PAYLOADS=[
+  {group:"✅ Work against this query (SQLite)", items:[
+    {p:"' OR 1=1 --", d:"True condition + comments out the password → returns all"},
+    {p:"admin' --", d:"Logs in as admin; the -- comments out the password check"},
+    {p:"alice' --", d:"Same trick, targeting a specific user"},
+    {p:"' OR 1=1 LIMIT 1 --", d:"Forces a single row to be returned"},
+  ]},
+  {group:"❌ Fail here — and why (the lesson)", items:[
+    {p:"' OR '1'='1", d:"Without --, the password AND cancels it out → 0 rows"},
+    {p:"admin' #", d:"# is a MySQL comment, not SQLite → syntax error"},
+    {p:"') OR ('1'='1", d:"Assumes parentheses this query doesn't have → error"},
+    {p:'" OR "1"="1', d:"Double quotes are an identifier in SQLite → no match"},
+  ]},
+];
+
+function escapeHtml(s){return (s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error(src));document.head.appendChild(s);});}
+async function loadSqlJs(){ for(const base of CDNS){ try{ await loadScript(base+'sql-wasm.js'); return base; }catch(e){} } throw new Error('No reachable CDN'); }
+
+async function boot(){
+  try{
+    SQLBASE = await loadSqlJs();
+    SQL = await initSqlJs({locateFile:f=>SQLBASE+f});
+    resetDB(true);
+    renderPayloads();
+    setMode('v');
+    document.getElementById('loading').style.display='none';
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="max-width:440px;text-align:center;color:#ffb3c0">Could not load the SQLite engine (sql.js) from the CDNs. Check your connection / school network and reload the page.</div>';
+  }
+}
+
+function resetDB(silent){
+  if(db) db.close();
+  db = new SQL.Database();
+  db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, password TEXT NOT NULL);");
+  const stmt = db.prepare("INSERT INTO users (username,password) VALUES (?,?)");
+  SEED.forEach(u=>{stmt.run(u);});
+  stmt.free();
+  renderUsers();
+  if(!silent){clearLogin(); flash('addres','ok','Database reset to its initial state.');}
+}
+
+function renderUsers(){
+  const res = db.exec("SELECT id,username,password FROM users ORDER BY id");
+  const tb = document.getElementById('utable');
+  tb.innerHTML='';
+  if(!res.length){tb.innerHTML='<tr><td colspan="3" style="color:#93a1c4">(empty)</td></tr>';return;}
+  res[0].values.forEach(r=>{ tb.innerHTML+=`<tr><td>${r[0]}</td><td>${escapeHtml(r[1])}</td><td>${escapeHtml(r[2])}</td></tr>`; });
+}
+
+function addUser(){
+  const u=document.getElementById('newuser').value.trim();
+  const p=document.getElementById('newpass').value;
+  if(!u||!p){flash('addres','fail','Enter a username and password.');return;}
+  const stmt=db.prepare("INSERT INTO users (username,password) VALUES (?,?)");
+  stmt.run([u,p]); stmt.free();
+  renderUsers();
+  flash('addres','ok',`User <b>${escapeHtml(u)}</b> created.`);
+  document.getElementById('newuser').value='';document.getElementById('newpass').value='';
+}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('segV').className = m==='v'?'on-v':'';
+  document.getElementById('segS').className = m==='s'?'on-s':'';
+  const b=document.getElementById('loginBtn');
+  b.style.background = m==='v' ? '#ff6b81' : '#3ddc84';
+  b.style.color = m==='v' ? '#2a0a12' : '#06230f';
+  b.textContent = m==='v' ? 'Sign in (vulnerable)' : 'Sign in (secure)';
+  previewQuery();
+}
+
+function clearLogin(){
+  document.getElementById('loguser').value='';
+  document.getElementById('logpass').value='';
+  document.getElementById('logres').className='result';
+  previewQuery();
+}
+
+function previewQuery(){
+  const u=document.getElementById('loguser').value, p=document.getElementById('logpass').value;
+  const q=document.getElementById('qview');
+  if(mode==='v'){
+    q.innerHTML=`<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> username = <span class="str">'<span class="inj">${escapeHtml(u)||'…'}</span>'</span> <span class="kw">AND</span> password = <span class="str">'<span class="inj">${escapeHtml(p)||'…'}</span>'</span>`;
+  }else{
+    q.innerHTML=`<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> username = <span class="ph">?</span> <span class="kw">AND</span> password = <span class="ph">?</span>\n<span style="color:#7f8db0">-- parameters: </span><span class="ph">[${escapeHtml(u)||'…'}, ${escapeHtml(p)||'…'}]</span>`;
+  }
+}
+
+function doLogin(){
+  const u=document.getElementById('loguser').value, p=document.getElementById('logpass').value;
+  previewQuery();
+  if(mode==='v') vulnerableLogin(u,p); else safeLogin(u,p);
+}
+
+function vulnerableLogin(u,p){
+  const query=`SELECT * FROM users WHERE username = '${u}' AND password = '${p}'`;
+  try{
+    const res=db.exec(query);
+    if(res.length && res[0].values.length){
+      const n=res[0].values.length, first=res[0].values[0];
+      flash('logres','ok',`✅ <b>Access granted!</b> Logged in as <b>${escapeHtml(first[1])}</b> (id ${first[0]}). The query returned <b>${n}</b> row(s)${n>1?' — the injection bypassed the check.':'.'}`);
+    }else{
+      flash('logres','fail','❌ Login failed. No record matched.');
+    }
+  }catch(e){
+    flash('logres','err',`⚠️ SQL error: <b>${escapeHtml(e.message)}</b><br>Your input broke the query syntax — that is also a sign of injection.`);
+  }
+}
+
+function safeLogin(u,p){
+  const stmt=db.prepare("SELECT * FROM users WHERE username = ? AND password = ?");
+  stmt.bind([u,p]);
+  let row=null;
+  if(stmt.step()) row=stmt.getAsObject();
+  stmt.free();
+  if(row){
+    flash('logres','ok',`✅ <b>Access granted</b> as <b>${escapeHtml(row.username)}</b>. Here the input is treated as <b>data</b>, not code — the injection does not work.`);
+  }else{
+    flash('logres','fail','❌ Login failed. The parameterized query compared the literal text and nothing matched.');
+  }
+}
+
+function togglePayloads(){
+  payShown=!payShown;
+  document.getElementById('paylist').style.display = payShown?'flex':'none';
+  document.getElementById('payHint').style.display = payShown?'block':'none';
+  document.getElementById('payBtn').textContent = payShown?'Hide payloads':'Show payloads';
+}
+
+function renderPayloads(){
+  const box=document.getElementById('paylist');
+  box.innerHTML='';
+  PAYLOADS.forEach(grp=>{
+    const h=document.createElement('div'); h.className='grp'; h.textContent=grp.group; box.appendChild(h);
+    grp.items.forEach(x=>{
+      const el=document.createElement('div');
+      el.className='pill';
+      el.innerHTML=`<code>${escapeHtml(x.p)}</code><span>${x.d}</span>`;
+      el.onclick=()=>{
+        setMode('v');
+        document.getElementById('loguser').value=x.p;
+        document.getElementById('logpass').value='x';
+        previewQuery();
+        document.querySelector('.stage').scrollIntoView({behavior:'smooth',block:'center'});
+      };
+      box.appendChild(el);
+    });
+  });
+}
+
+function flash(id,kind,msg){ const el=document.getElementById(id); el.className='result '+kind; el.innerHTML=msg; }
+
+['loguser','logpass'].forEach(id=>document.addEventListener('input',e=>{if(e.target.id===id)previewQuery();}));
+boot();
+</script>
+</body>
+</html>
