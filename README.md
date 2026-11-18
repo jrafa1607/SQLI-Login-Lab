@@ -1,10 +1,9 @@
 # SQL Injection Lab
 
 A **100% client-side** application for a SQL Injection class (Intrusion Testing Techniques).
-A **real SQLite database** runs in the student's browser (via [sql.js](https://sql.js.org)); nothing is sent to any server.
-Avaliable here: https://jrafa1607.github.io/sqli-login-lab/
+A **real SQLite database** runs in the student's browser; nothing is sent to any server.
+Avaliable here: https://jrafa1607.github.io/sqli-login-lab/.  You can:
 
-You can:
 - **Create** and **query** users in the `users` table;
 - **Exploit the login field** comparing the **vulnerable** version with the **secure** one;
 - Reveal **bypass payloads** on demand and see, live, the query being built and why each technique works or fails.
@@ -20,10 +19,8 @@ python3 -m http.server 8000
 
 ## How it works
 
-- `vulnerable_login` builds the query by **concatenating** the input directly into the SQL
-  string, so text like `admin' --` changes the query's logic.
-- `safe_login` uses a **parameterized query** (`... WHERE username = ? AND password = ?`),
-  so the input is treated as **data**, never as code — and the injection stops working.
+- `vulnerable_login` builds the query by **concatenating** the input directly into the SQL string.
+- `safe_login` uses a **parameterized query**, so the input is treated as **data**, never as code.
 
 The payload list is grouped into those that **work** against this exact query (SQLite) and
 those that **fail on purpose** — the lesson being that a payload must match both the
