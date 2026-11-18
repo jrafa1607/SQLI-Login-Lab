@@ -10,6 +10,10 @@ Students can:
 
 > Isolated training environment, for educational purposes only. Testing SQL Injection on third-party systems without authorization is a crime (Law 12.737/2012, Brazil).
 
+--- 
+
+Link to Application access: https://jrafa1607.github.io/sqli-login-lab/
+
 ## Publish on GitHub Pages
 
 1. Create a new repository (e.g. `sqli-lab`) and upload **`index.html`** to the root.
