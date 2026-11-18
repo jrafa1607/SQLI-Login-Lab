@@ -29,6 +29,7 @@ those that **fail on purpose** — the lesson being that a payload must match bo
 > Isolated training environment, for educational purposes only.
 > Testing SQL Injection on third-party systems without authorization is a crime (Law 12.737/2012, Brazil).
 
+---
 
 #### ⚖️ Intellectual Property (IP) Notice
 
